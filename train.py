@@ -20,7 +20,7 @@ from openwakeword.data import generate_adversarial_texts, augment_clips, mmap_ba
 from openwakeword.utils import compute_features_from_generator
 from openwakeword.utils import AudioFeatures
 
-
+indxxx = 0
 # Base model class for an openwakeword model
 class Model(nn.Module):
     def __init__(self, n_classes=1, input_shape=(16, 96), model_type="dnn",
@@ -668,24 +668,30 @@ if __name__ == '__main__':
 
     if args.generate_clips is True:
         # Generate positive clips for training
-        logging.info("#"*50 + "\nGenerating positive clips for training\n" + "#"*50)
+        print("#"*50 + "\nGenerating positive clips for training\n" + "#"*50)
         if not os.path.exists(positive_train_output_dir):
             os.mkdir(positive_train_output_dir)
         n_current_samples = len(os.listdir(positive_train_output_dir))
         if n_current_samples <= 0.95*config["n_samples"]:
-            logging.info(f"Начинаю генерацию положительных тренировочных аудио для {len(config['target_phrase'])} фраз")
-            samples_per_phrase = (config["n_samples"] - n_current_samples) // len(config["target_phrase"])
-            for idx, phrase in tqdm(enumerate(config["target_phrase"]), total=len(config["target_phrase"]), desc="Генерация положительных тренировочных аудио"):
-                logging.info(f"Генерация аудио для фразы '{phrase}' ({idx+1}/{len(config['target_phrase'])})")
+            print(f"Начинаю генерацию положительных тренировочных аудио для {len(config['target_phrase'])} фраз")
+            
+            
+            for i in range(len(config['target_phrase'])):
+                phrase = config['target_phrase'][indxxx]
+                indxxx += 1
+                if indxxx > len(config['target_phrase']):
+                    indxxx = 0
+                print(f"Генерация аудио для фразы '{phrase}'")
                 generate_samples_onnx(
-                    text=phrase, max_samples=samples_per_phrase,
+                    text=phrase, max_samples=config["n_samples"]/len(config['target_phrase']),
                     batch_size=config["tts_batch_size"],
                     noise_scales=[0.98], noise_scale_ws=[0.98], length_scales=[0.75, 1.0, 1.25],
                     output_dir=positive_train_output_dir, auto_reduce_batch_size=True,
-                    file_names=[uuid.uuid4().hex + f"_{idx}.wav" for i in range(samples_per_phrase)],
-                    model="./piper-sample-generator/voices/ru_RU-dmitri-medium.onnx"
+                    file_names=[uuid.uuid4().hex + ".wav" for i in range(config["n_samples"])],
+                    model="./piper-sample-generator/voices/ru_RU-dmitri-medium.onnx",
+                    sample_rate=16000
                 )
-            logging.info("Завершена генерация положительных тренировочных аудио")
+            print("Завершена генерация положительных тренировочных аудио")
             torch.cuda.empty_cache()
         else:
             logging.warning(f"Skipping generation of positive clips for training, as ~{config['n_samples']} already exist")
@@ -697,14 +703,18 @@ if __name__ == '__main__':
         n_current_samples = len(os.listdir(positive_test_output_dir))
         if n_current_samples <= 0.95*config["n_samples_val"]:
             logging.info(f"Начинаю генерацию положительных тестовых аудио для {len(config['target_phrase'])} фраз")
-            samples_per_phrase = (config["n_samples_val"] - n_current_samples) // len(config["target_phrase"])
-            for idx, phrase in tqdm(enumerate(config["target_phrase"]), total=len(config["target_phrase"]), desc="Генерация положительных тестовых аудио"):
-                logging.info(f"Генерация тестового аудио для фразы '{phrase}' ({idx+1}/{len(config['target_phrase'])})")
-                generate_samples_onnx(text=phrase, max_samples=samples_per_phrase,
+            for i in range(len(config['target_phrase'])):
+                phrase = config['target_phrase'][indxxx]
+                indxxx += 1
+                if indxxx > len(config['target_phrase']):
+                    indxxx = 0
+                logging.info(f"Генерация тестового аудио для фразы '{phrase}'")
+                generate_samples_onnx(text=phrase, max_samples=config["n_samples"]/len(config['target_phrase']),
                                       batch_size=config["tts_batch_size"],
                                       noise_scales=[1.0], noise_scale_ws=[1.0], length_scales=[0.75, 1.0, 1.25],
                                       output_dir=positive_test_output_dir, auto_reduce_batch_size=True,
-                                      model="./piper-sample-generator/voices/ru_RU-dmitri-medium.onnx")
+                                      model="./piper-sample-generator/voices/ru_RU-dmitri-medium.onnx",
+                                      sample_rate=16000)
             logging.info("Завершена генерация положительных тестовых аудио")
             torch.cuda.empty_cache()
         else:
@@ -731,7 +741,8 @@ if __name__ == '__main__':
                                      noise_scales=[0.98], noise_scale_ws=[0.98], length_scales=[0.75, 1.0, 1.25],
                                      output_dir=negative_train_output_dir, auto_reduce_batch_size=True,
                                      file_names=[uuid.uuid4().hex + f"_{idx}.wav" for i in range(total_samples_per_phrase)],
-                                     model="./piper-sample-generator/voices/ru_RU-dmitri-medium.onnx"
+                                     model="./piper-sample-generator/voices/ru_RU-dmitri-medium.onnx",
+                                     sample_rate=16000
                                      )
             logging.info("Завершена генерация негативных тренировочных аудио")
             torch.cuda.empty_cache()
@@ -758,7 +769,8 @@ if __name__ == '__main__':
                                      batch_size=config["tts_batch_size"]//7,
                                      noise_scales=[1.0], noise_scale_ws=[1.0], length_scales=[0.75, 1.0, 1.25],
                                      output_dir=negative_test_output_dir, auto_reduce_batch_size=True,
-                                     model="./piper-sample-generator/voices/ru_RU-dmitri-medium.onnx")
+                                     model="./piper-sample-generator/voices/ru_RU-dmitri-medium.onnx",
+                                     sample_rate=16000)
             logging.info("Завершена генерация негативных тестовых аудио")
             torch.cuda.empty_cache()
         else:
