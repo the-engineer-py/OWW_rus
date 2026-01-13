@@ -677,10 +677,11 @@ if __name__ == '__main__':
             
             
             for i in range(len(config['target_phrase'])):
+                if indxxx > len(config['target_phrase'])-1:
+                    indxxx = 0
                 phrase = config['target_phrase'][indxxx]
                 indxxx += 1
-                if indxxx > len(config['target_phrase']):
-                    indxxx = 0
+                
                 print(f"Генерация аудио для фразы '{phrase}'")
                 generate_samples_onnx(
                     text=phrase, max_samples=config["n_samples"]/len(config['target_phrase']),
@@ -692,6 +693,7 @@ if __name__ == '__main__':
                     sample_rate=16000
                 )
             print("Завершена генерация положительных тренировочных аудио")
+            indxxx = 0
             torch.cuda.empty_cache()
         else:
             logging.warning(f"Skipping generation of positive clips for training, as ~{config['n_samples']} already exist")
@@ -704,10 +706,10 @@ if __name__ == '__main__':
         if n_current_samples <= 0.95*config["n_samples_val"]:
             logging.info(f"Начинаю генерацию положительных тестовых аудио для {len(config['target_phrase'])} фраз")
             for i in range(len(config['target_phrase'])):
+                if indxxx > len(config['target_phrase'])-1:
+                    indxxx = 0
                 phrase = config['target_phrase'][indxxx]
                 indxxx += 1
-                if indxxx > len(config['target_phrase']):
-                    indxxx = 0
                 logging.info(f"Генерация тестового аудио для фразы '{phrase}'")
                 generate_samples_onnx(text=phrase, max_samples=config["n_samples"]/len(config['target_phrase']),
                                       batch_size=config["tts_batch_size"],
@@ -716,6 +718,7 @@ if __name__ == '__main__':
                                       model="./piper-sample-generator/voices/ru_RU-dmitri-medium.onnx",
                                       sample_rate=16000)
             logging.info("Завершена генерация положительных тестовых аудио")
+            indxxx = 0
             torch.cuda.empty_cache()
         else:
             logging.warning(f"Skipping generation of positive clips testing, as ~{config['n_samples_val']} already exist")
